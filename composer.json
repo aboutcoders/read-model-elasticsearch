@@ -1,5 +1,5 @@
 {
-    "name": "broadway/read-model-elasticsearch",
+    "name": "aboutcoders/read-model-elasticsearch",
     "description": "Elasticsearch read model implementation using elastic/elasticsearch-php",
     "license": "MIT",
     "require": {
