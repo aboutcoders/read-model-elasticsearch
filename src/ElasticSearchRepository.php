@@ -46,7 +46,8 @@ class ElasticSearchRepository implements Repository
         string $index,
         string $class,
         array $notAnalyzedFields = []
-    ) {
+    )
+    {
         $this->client = $client;
         $this->serializer = $serializer;
         $this->index = $index;
@@ -54,9 +55,6 @@ class ElasticSearchRepository implements Repository
         $this->notAnalyzedFields = $notAnalyzedFields;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function save(Identifiable $data): void
     {
         Assertion::isInstanceOf($data, $this->class);
@@ -64,10 +62,9 @@ class ElasticSearchRepository implements Repository
         $serializedReadModel = $this->serializer->serialize($data);
 
         $params = [
-            'index' => $this->index,
-            'type' => $serializedReadModel['class'],
-            'id' => $data->getId(),
-            'body' => $serializedReadModel['payload'],
+            'index'   => $this->index,
+            'id'      => $data->getId(),
+            'body'    => $serializedReadModel['payload'],
             'refresh' => true,
         ];
 
@@ -81,8 +78,7 @@ class ElasticSearchRepository implements Repository
     {
         $params = [
             'index' => $this->index,
-            'type' => $this->class,
-            'id' => (string) $id,
+            'id'    => (string)$id,
         ];
 
         try {
@@ -121,9 +117,8 @@ class ElasticSearchRepository implements Repository
     {
         try {
             $this->client->delete([
-                'id' => (string) $id,
-                'index' => $this->index,
-                'type' => $this->class,
+                'id'      => (string)$id,
+                'index'   => $this->index,
                 'refresh' => true,
             ]);
         } catch (Missing404Exception $e) { // It was already deleted or never existed, fine by us!
@@ -150,12 +145,11 @@ class ElasticSearchRepository implements Repository
         try {
             return $this->client->search([
                 'index' => $this->index,
-                'type' => $this->class,
-                'body' => [
-                    'query' => $query,
+                'body'  => [
+                    'query'  => $query,
                     'facets' => $facets,
                 ],
-                'size' => $size,
+                'size'  => $size,
             ]);
         } catch (Missing404Exception $e) {
             return [];
@@ -167,11 +161,10 @@ class ElasticSearchRepository implements Repository
         return $this->searchAndDeserializeHits(
             [
                 'index' => $this->index,
-                'type' => $this->class,
-                'body' => [
+                'body'  => [
                     'query' => $query,
                 ],
-                'size' => 500,
+                'size'  => 500,
             ]
         );
     }
@@ -196,7 +189,6 @@ class ElasticSearchRepository implements Repository
     {
         return $this->serializer->deserialize(
             [
-                'class' => $hit['_type'],
                 'payload' => $hit['_source'],
             ]
         );
@@ -225,8 +217,6 @@ class ElasticSearchRepository implements Repository
      */
     public function createIndex(): bool
     {
-        $class = $this->class;
-
         $indexParams = [
             'index' => $this->index,
         ];
@@ -244,9 +234,9 @@ class ElasticSearchRepository implements Repository
 
         $this->client->indices()->create($indexParams);
         $response = $this->client->cluster()->health([
-            'index' => $this->index,
+            'index'           => $this->index,
             'wait_for_status' => 'yellow',
-            'timeout' => '5s',
+            'timeout'         => '5s',
         ]);
 
         return isset($response['status']) && 'red' !== $response['status'];
@@ -258,16 +248,16 @@ class ElasticSearchRepository implements Repository
     public function deleteIndex(): bool
     {
         $indexParams = [
-            'index' => $this->index,
+            'index'   => $this->index,
             'timeout' => '5s',
         ];
 
         $this->client->indices()->delete($indexParams);
 
         $response = $this->client->cluster()->health([
-            'index' => $this->index,
+            'index'           => $this->index,
             'wait_for_status' => 'yellow',
-            'timeout' => '5s',
+            'timeout'         => '5s',
         ]);
 
         return isset($response['status']) && 'red' !== $response['status'];
